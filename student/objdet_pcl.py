@@ -17,6 +17,7 @@ import torch
 from PIL import Image
 import io
 import zlib
+import open3d as o3d
 
 # add project directory to python path to enable relative imports
 import os
@@ -32,27 +33,49 @@ from tools.waymo_reader.simple_waymo_open_dataset_reader import dataset_pb2, lab
 # object detection tools and helper functions
 import misc.objdet_tools as tools
 
+def next_frame(vis):
+    vis.close()
 
+def destroy_vis(vis):
+    vis.destroy_window()
+    
+    
 # visualize lidar point-cloud
 def show_pcl(pcl):
 
     ####### ID_S1_EX2 START #######     
     #######
     print("student task ID_S1_EX2")
+    try: 
+        # step 1 : initialize open3d with key callback and create window
+        vis = o3d.visualization.VisualizerWithKeyCallback()
+        vis.create_window(window_name="LiDAR Visualization")
 
-    # step 1 : initialize open3d with key callback and create window
+        # step 2 : create instance of open3d point-cloud class
+        pcd = o3d.geometry.PointCloud()
+
+        # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
+        pcd.points = o3d.utility.Vector3dVector(pcl[:, :3])
+
+        # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
+        vis.add_geometry(pcd) 
+
+        # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
+        vis.register_key_callback(262, next_frame)
+        vis.register_key_callback(32, destroy_vis)
+        vis.update_renderer()
+        vis.poll_events()
+        vis.run()
     
-    # step 2 : create instance of open3d point-cloud class
-
-    # step 3 : set points in pcd instance by converting the point-cloud into 3d vectors (using open3d function Vector3dVector)
-
-    # step 4 : for the first frame, add the pcd instance to visualization using add_geometry; for all other frames, use update_geometry instead
-    
-    # step 5 : visualize point cloud and keep window open until right-arrow is pressed (key-code 262)
-
+    except Exception as e:
+        # Makes sure to exit loop_over_dataset loop
+        print(e)
+        raise StopIteration
+        
+ 
+        
     #######
     ####### ID_S1_EX2 END #######     
-       
 
 # visualize range image
 def show_range_image(frame, lidar_name):
@@ -87,7 +110,7 @@ def show_range_image(frame, lidar_name):
     print(img_range.shape) 
     print(img_intensity.shape)
     img_range_intensity = np.hstack((img_range,
-        img_intensity))
+        img_intensity)).astype(np.uint8)
     #######
     ####### ID_S1_EX1 END #######     
     
