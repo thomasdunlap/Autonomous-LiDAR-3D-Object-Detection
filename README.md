@@ -1,4 +1,106 @@
 
+# Autonomous Perception: Tracking 3D-Objects Over Time
+
+** **README IS CURRENTLY A ROUGH DRAFT AND BEING UPDATED DAILY** **
+
+### 1. Write a short recap of the four tracking steps and what you implemented there (filter, track management, association, camera fusion). Which results did you achieve? Which part of the project was most difficult for you to complete, and why?
+
+
+#### Visualize range image channels (ID_S1_EX1)
+
+*Where to find this task?*
+
+This task involves writing code within the function show_range_image located in the file student/objdet_pcl.py.
+
+*What this task is about?*
+
+In the Waymo Open dataset, lidar data is stored as a range image. Therefore, this task is about extracting two of the data channels within the range image, which are "range" and "intensity", and convert the floating-point data to an 8-bit integer value range. Once you have done so, please use the OpenCV library to stack the range and intensity image vertically and visualize it.
+
+A detailed description of all required steps can be found in the code.
+
+#### Visualize lidar point-cloud (ID_S1_EX2)
+
+*Where to find this task?*
+
+This task involves writing code within the function show_pcl located in the file student/objdet_pcl.py.
+
+*What this task is about?*
+
+The goal of this task is to use the Open3D library to display the lidar point-cloud in a 3d viewer in order to develop a feel for the nature of lidar point-clouds. A detailed description of all required steps can be found in the code.
+
+When the code is functional, you are supposed to use the viewer to locate and closely inspect point-clouds on vehicles and write a short report that includes the following items:
+
+    Find and display 6 examples of vehicles with varying degrees of visibility in the point-cloud
+    Identify vehicle features that appear as a stable feature on most vehicles (e.g. rear-bumper, tail-lights) and describe them briefly. Also, use the range image viewer from the last example to underpin your findings using the lidar intensity channel.
+
+#### Convert sensor coordinates to BEV-map coordinates (ID_S2_EX1)
+
+Where to find this task?
+
+This task involves writing code within the function bev_from_pcl located in the file student/objdet_pcl.py.
+
+
+What this task is about?
+
+The goal of this task is to perform the first step in creating a birds-eye view (BEV) perspective of the lidar point-cloud. Based on the (x,y)-coordinates in sensor space, you must compute the respective coordinates within the BEV coordinate space so that in subsequent tasks, the actual BEV map can be filled with lidar data from the point-cloud.
+
+A detailed description of all required steps can be found in the code.
+
+### 2. Do you see any benefits in camera-lidar fusion compared to lidar-only tracking (in theory and in your concrete results)? 
+
+Up to the point in which more sensors compromise necessary latency of vehicle actions, more sensors and sensor-fusion improves over single-sensor results.  Noise, sensor-failure, and individual sensor weaknesses can be more easily compensated for with additional sensors.
+
+Benefits of camera-lidar fusion over exclusively leveraging lidar data are many.  Point there are certain kinds of reflective surfaces lidar can struggle with - adding camera sensory information can help resolve issues where there is noise in the lidar.  More sensor data is generally helpful up to the threshold where it effects production performance.
+
+
+### 3. Which challenges will a sensor fusion system face in real-life scenarios? Did you see any of these challenges in the project?
+
+In real-life, dirty data, latency of preprocessing and predicting with live data, camera's being effected or obscured by weather, lidar dealing with surfaces that provide too much noise or non-optimal measurements.  Dealing with the fact that camera images are a 2D project of a 3d world.  The cost of getting the "best" or "fastest" sensors vs. what consumers will purchase.
+
+Object dectection is based on deep learning models that "learn" based on a large number of examples in a dataset.  It is probably impossible to represent every scenario that will every happen while driving - so the battle is getting enough examples of common occurances and putting in enough safety measures so the car to percieve and act safely.
+
+
+### 4. Can you think of ways to improve your tracking results in the future?
+
+Yes, having more data.  Going through and checking the annotations to make sure they are correct.
+
+## Key Terms
+
+* Frustum: portion of cone or pyramid that lies between parallel planes
+* Voxel: 3D pixel - Volume Element represents unit of 3d space in a grid
+* MLP: Multi-layer perceptron
+* CNN: Convolutional Neural Network
+* YOLO: "You Only Look Once"; object detection via deep learning
+* BEV: Birds-eye view
+* TP: True Positive - Predicted correct positive label
+* TN: True Negative - Predicted correct negative label
+* FP: False Positive - dectected object class incorrectly
+* FN: False Negative - didn't detect object class when there should be a dectection
+* IoU: Intersection over Union
+* mAP: Mean Average Precision
+
+## Equations
+
+BEV map properties:
+* Height $H_{i,j} = max(P_{i,j} * [0,0,1]T)$
+* Intensity $I_{i,j} = max(I(P_{i,j}))$
+* Density $D_{i,j} = min(1.0,\ \frac{log(N+1)}{64})$
+
+$P_{i,j}$ is the set of points that falls into each cell, with $i,j$ as the respective cell coordinates. $N_{i,j}$ refers to the number of points in a cell.
+
+Precision and recall:
+
+Precision: $P = \frac{TP}{TP + FP}$
+
+Recall: $R = \frac{TP}{TP + FN}$
+
+Accuracy: $A = \frac{TP + TN}{TP + TN + FP + FN}$
+
+
+Average Precision: $AP = \frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})$
+
+---------
+
 # SDCND : Sensor Fusion and Tracking
 This is the project for the second course in the  [Udacity Self-Driving Car Engineer Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213) : Sensor Fusion and Tracking. 
 
