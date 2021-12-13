@@ -82,23 +82,32 @@ Yes, having more data.  Going through and checking the annotations to make sure 
 ## Equations
 
 BEV map properties:
-* Height $H_{i,j} = max(P_{i,j} * [0,0,1]T)$
-* Intensity $I_{i,j} = max(I(P_{i,j}))$
-* Density $D_{i,j} = min(1.0,\ \frac{log(N+1)}{64})$
+* Height
 
-$P_{i,j}$ is the set of points that falls into each cell, with $i,j$ as the respective cell coordinates. $N_{i,j}$ refers to the number of points in a cell.
+  ![H_{i,j} = max(P_{i,j} \cdot [0,0,1]T)](https://render.githubusercontent.com/render/math?math=%5Ctextstyle+H_%7Bi%2Cj%7D+%3D+max%28P_%7Bi%2Cj%7D+%5Ccdot+%5B0%2C0%2C1%5DT%29)
+
+* Intensity 
+  ![I_{i,j} = max(I(P_{i,j}))](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+I_%7Bi%2Cj%7D+%3D+max%28I%28P_%7Bi%2Cj%7D%29%29)
+
+* Density 
+  ![D_{i,j} = min(1.0,\ \frac{log(N+1)}{64})](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+D_%7Bi%2Cj%7D+%3D+min%281.0%2C%5C+%5Cfrac%7Blog%28N%2B1%29%7D%7B64%7D%29)
+
+![P_{i,j}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+P_%7Bi%2Cj%7D) is the set of points that falls into each cell, with ![i,j](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+i%2Cj) as the respective cell coordinates. ![N_{i,j}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+N_%7Bi%2Cj%7D) refers to the number of points in a cell.
 
 Precision and recall:
 
-Precision:  $P = \frac{TP}{TP + FP}$
-<img src="https://render.githubusercontent.com/render/math?math=P = \frac{TP}{TP + FP}">
-
-Recall: $R = \frac{TP}{TP + FN}$
-
-Accuracy: $A = \frac{TP + TN}{TP + TN + FP + FN}$
+Precision:  
+  ![\frac{TP}{TP + FP}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP%7D%7BTP+%2B+FP%7D)
 
 
-Average Precision: $AP = \frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})$
+Recall:
+    ![\frac{TP}{TP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP%7D%7BTP+%2B+FN%7D)
+Accuracy: 
+  ![\frac{TP + TN}{TP + TN + FP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP+%2B+TN%7D%7BTP+%2B+TN+%2B+FP+%2B+FN%7D)
+
+
+Average Precision: 
+  ![\frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7B1%7D%7Bn%7D+%5Csum_%7BRecall_%7Bi%7D%7DPrecision%28Recall_%7Bi%7D%29)
 
 ---------
 
