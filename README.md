@@ -90,7 +90,8 @@ $P_{i,j}$ is the set of points that falls into each cell, with $i,j$ as the resp
 
 Precision and recall:
 
-Precision: $P = \frac{TP}{TP + FP}$
+Precision:  $P = \frac{TP}{TP + FP}$
+<img src="https://render.githubusercontent.com/render/math?math=P = \frac{TP}{TP + FP}">
 
 Recall: $R = \frac{TP}{TP + FN}$
 
