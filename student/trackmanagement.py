@@ -50,6 +50,20 @@ class Track:
         self.state = 'confirmed'
         self.score = 0
         
+        z = np.ones((4, 1))
+        z[:meas.sensor.dim_meas] = meas.z
+        self.x = np.zeros((6,1))
+        self.x[:3] = (meas.sensor.sens_to_veh * z)[:3]
+        self.P = np.matrix([[9.0e-02, 0.0e+00, 0.0e+00, 0.0e+00,          0.0e+00,          0.0e+00],
+                            [0.0e+00, 9.0e-02, 0.0e+00, 0.0e+00,          0.0e+00,          0.0e+00],
+                            [0.0e+00, 0.0e+00, 6.4e-03, 0.0e+00,          0.0e+00,          0.0e+00],
+                            [0.0e+00, 0.0e+00, 0.0e+00, params.sigma_p44, 0.0e+00,          0.0e+00],
+                            [0.0e+00, 0.0e+00, 0.0e+00, 0.0e+00,          params.sigma_p55, 0.0e+00],
+                            [0.0e+00, 0.0e+00, 0.0e+00, 0.0e+00,          0.0e+00,          params.sigma_p66]])
+        
+        self.state = 'initialized'
+        self.score = 1. / params.window
+        #self.assignments = [1]
         ############
         # END student code
         ############ 
@@ -110,6 +124,17 @@ class Trackmanagement:
                     pass 
 
         # delete old tracks   
+        old_tracks = []
+        for track in self.track_list:
+            P = track.P
+            if (track.state == 'initialized' and track.score < 0.3 and len(track.assignments) >= 3)\
+                or (track.state == 'tentative' and track.score <= 0.6) \
+                or (track.state == 'confirmed' and track.score <= 0.8) \
+                or (P[0, 0] > params.max_P or P[1, 1] > params.max_P):
+                old_tracks.append(track)
+        
+        for track in old_tracks:
+            self.delete_track(track)
 
         ############
         # END student code
@@ -141,6 +166,7 @@ class Trackmanagement:
         ############
 
         pass
+        
         
         ############
         # END student code

@@ -40,7 +40,6 @@ def next_frame(vis):
 def destroy_vis(vis):
     vis.destroy_window()
     
-    
 # visualize lidar point-cloud
 def show_pcl(pcl):
 
