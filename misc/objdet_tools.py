@@ -434,3 +434,4 @@ def project_labels_into_camera(camera_calibration, image, labels, labels_valid, 
     else:
         return image
 
+    

@@ -238,7 +238,7 @@ def detect_objects(input_bev_maps, model, configs):
             ## step 3 : perform the conversion using the limits for x, y and z set in the configs structure
         if ((x >= configs.lim_x[0] and (x <= configs.lim_x[1])
             and (y >= configs.lim_y[0]) and y <= configs.lim_y[1])
-            and (z >= configs.lim_z[0]) and (z >= configs.lim_z[1]))
+            and (z >= configs.lim_z[0]) and (z >= configs.lim_z[1])):
             
             ## step 4 : append the current object to the 'objects' array
             objects.append([1, x, y, z, h, w, l, yaw])

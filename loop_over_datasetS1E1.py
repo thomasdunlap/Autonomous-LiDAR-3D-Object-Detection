@@ -53,8 +53,7 @@ import misc.params as params
 data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord' # Sequence 1
 # data_filename = 'training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 #data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [0, 10] # show only frames in interval for debugging; 200 originially
-
+show_only_frames = [0, 1] # show only frames in interval for debugging; 200 originially
 ## Prepare Waymo Open Dataset file for loading
 img_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img/')
 data_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'dataset', data_filename) # adjustable path in case this script is called from another working directory
@@ -182,6 +181,7 @@ while True:
             img_range = pcl.show_range_image(frame, lidar_name)
             img_range = img_range.astype(np.uint8)
             cv2.imshow('range_image', img_range)
+            cv2.imwrite(img_fullpath + "range_img" + str(cnt_frame) + ".png", img_range)
             cv2.waitKey(vis_pause_time)
 
         if 'show_pcl' in exec_list:
