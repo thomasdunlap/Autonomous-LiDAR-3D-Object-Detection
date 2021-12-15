@@ -154,7 +154,7 @@ def bev_from_pcl(lidar_pcl, configs):
     lidar_pcl_cpy[lidar_pcl_cpy[:, 1] < 0, 1] = 0
 
     # step 4 : visualize point-cloud using the function show_pcl from a previous task
-    #show_pcl(lidar_pcl_cpy)
+    show_pcl(lidar_pcl_cpy)
     
     #######
     ####### ID_S2_EX1 END #######     
@@ -190,8 +190,8 @@ def bev_from_pcl(lidar_pcl, configs):
     intensity_map[np.int_(lidar_pcl_top[:, 0]), np.int_(lidar_pcl_top[:, 1])] = intensities
 
     ## step 5 : temporarily visualize the intensity map using OpenCV to make sure that vehicles separate well from the background
-    #plt.imshow((intensity_map * 255).astype('uint8'))
-    #plt.show()
+    plt.imshow((intensity_map * 255).astype('uint8'))
+    plt.show()
 
     #######
     ####### ID_S2_EX2 END ####### 
