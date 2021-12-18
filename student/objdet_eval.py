@@ -105,6 +105,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
     
     #######
     ####### ID_S4_EX2 END #######     
+    print(f"ap {all_positives}, tp {true_positives}, fn {false_negatives}, fp {false_positives}")
     precision = true_positives / (true_positives + false_positives)
     pos_negs = [all_positives, true_positives, false_negatives, false_positives]
     det_performance = [ious, center_devs, pos_negs]
@@ -113,7 +114,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
 
 
 # evaluate object detection performance based on all frames
-def compute_performance_stats(det_performance_all):
+def compute_performance_stats(det_performance_all, configs_det):
 
     # extract elements
     ious = []
@@ -129,10 +130,12 @@ def compute_performance_stats(det_performance_all):
     print('student task ID_S4_EX3')
 
     ## step 1 : extract the total number of positives, true positives, false negatives and false positives
-    pos = sum(pos_negs[:, 0])
-    true_pos = sum(pos_negs[:, 1])
-    false_neg = sum(pos_negs[:, 2])
-    false_pos = sum(pos_negs[:, 3])
+    print(pos_negs)
+    [pos, true_pos, false_neg, false_pos] = np.sum(pos_negs, axis=0)
+    #pos = sum(pos_negs[:, 0])
+    #true_pos = sum(pos_negs[:, 1])
+    #false_neg = sum(pos_negs[:, 2])
+    #false_pos = sum(pos_negs[:, 3])
     ## step 2 : compute precision
     precision = true_pos / float(true_pos + false_pos)
 
