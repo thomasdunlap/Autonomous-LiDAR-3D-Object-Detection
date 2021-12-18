@@ -232,7 +232,7 @@ def project_detections_into_bev(bev_map, detections, configs, color=[]):
         cv2.polylines(bev_map, [corners_int], True, color, 2)
 
         # draw colored line to identify object front
-        corners_int = bev_corners.reshape(-1, 2)
+        corners_int = bev_corners.reshape(-1, 2).astype(int)
         cv2.line(bev_map, (corners_int[0, 0], corners_int[0, 1]), (corners_int[3, 0], corners_int[3, 1]), (255, 255, 0), 2)
 
 
@@ -377,7 +377,7 @@ def show_objects_labels_in_bev(detections, object_labels, bev_maps, configs):
 
 
 # visualize detection results as overlay in birds-eye view and ground-truth labels in camera image
-def show_objects_in_bev_labels_in_camera(detections, bev_maps, image, object_labels, object_labels_valid, camera_calibration, configs):
+def show_objects_in_bev_labels_in_camera(detections, bev_maps, image, object_labels, object_labels_valid, camera_calibration, configs, cnt_frame):
 
     # project detections into birds-eye view
     bev_map = (bev_maps.squeeze().permute(1, 2, 0).numpy() * 255).astype(np.uint8)
@@ -405,6 +405,7 @@ def show_objects_in_bev_labels_in_camera(detections, bev_maps, image, object_lab
 
     # show combined view
     cv2.imshow('labels vs. detected objects', out_img)
+    cv2.imwrite('./movie/bev' + str(cnt_frame) + '.png', out_img)
 
 
 # visualize object labels in camera image
