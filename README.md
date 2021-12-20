@@ -18,6 +18,10 @@ In the Waymo Open dataset, lidar data is stored as a range image. Therefore, thi
 
 A detailed description of all required steps can be found in the code.
 
+![](img/range_img0.png)
+
+![](img/range_img1.png)
+
 #### Visualize lidar point-cloud (ID_S1_EX2)
 
 *Where to find this task?*
@@ -33,6 +37,22 @@ When the code is functional, you are supposed to use the viewer to locate and cl
     Find and display 6 examples of vehicles with varying degrees of visibility in the point-cloud
     Identify vehicle features that appear as a stable feature on most vehicles (e.g. rear-bumper, tail-lights) and describe them briefly. Also, use the range image viewer from the last example to underpin your findings using the lidar intensity channel.
 
+![](img/ScreenCapture_2021-12-14-21-16-15.png)
+
+![](img/ScreenCapture_2021-12-14-21-20-32.png)
+
+![](img/ScreenCapture_2021-12-14-21-21-42.png)
+
+![](img/ScreenCapture_2021-12-14-21-26-37.png)
+
+![](img/ScreenCapture_2021-12-14-21-32-00.png)
+
+![](img/ScreenCapture_2021-12-14-21-33-30.png)
+
+![](img/ScreenCapture_2021-12-14-21-35-05.png)
+
+
+
 #### Convert sensor coordinates to BEV-map coordinates (ID_S2_EX1)
 
 Where to find this task?
@@ -45,6 +65,37 @@ What this task is about?
 The goal of this task is to perform the first step in creating a birds-eye view (BEV) perspective of the lidar point-cloud. Based on the (x,y)-coordinates in sensor space, you must compute the respective coordinates within the BEV coordinate space so that in subsequent tasks, the actual BEV map can be filled with lidar data from the point-cloud.
 
 A detailed description of all required steps can be found in the code.
+
+![](img/s2e1a.png)
+
+![](img/s2e1b.png)
+
+![](img/s2e2a.png)
+
+![](img/s2e2b.png)
+
+![](img/s2e3a.png)
+
+![](img/s2e3b.png)
+
+### 3
+
+
+![Results from 60 frames of resnet detection](movie/detection2.gif)
+
+
+
+
+### 4
+
+
+![Results from two frames](img/metrics2.png)
+
+
+
+![Gif of 60 frames of darknet](movie/darknet.gif)
+
+![Results from 60 frames](img/metricsMult.png)
 
 ### 2. Do you see any benefits in camera-lidar fusion compared to lidar-only tracking (in theory and in your concrete results)? 
 
