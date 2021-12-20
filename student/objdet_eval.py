@@ -131,11 +131,8 @@ def compute_performance_stats(det_performance_all, configs_det):
 
     ## step 1 : extract the total number of positives, true positives, false negatives and false positives
     print(pos_negs)
-    [pos, true_pos, false_neg, false_pos] = np.sum(pos_negs, axis=0)
-    #pos = sum(pos_negs[:, 0])
-    #true_pos = sum(pos_negs[:, 1])
-    #false_neg = sum(pos_negs[:, 2])
-    #false_pos = sum(pos_negs[:, 3])
+    pos, true_pos, false_neg, false_pos = np.sum(pos_negs, axis=0)
+    
     ## step 2 : compute precision
     precision = true_pos / float(true_pos + false_pos)
 
