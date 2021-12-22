@@ -5,34 +5,23 @@
 
 ### 1. Write a short recap of the four tracking steps and what you implemented there (filter, track management, association, camera fusion). Which results did you achieve? Which part of the project was most difficult for you to complete, and why?
 
+Camera-lidar fusion detection takes four steps:
+  1. Engineering the Lidar Point-Cloud from range images.
+  2. Transform the point cloud to a Bird's Eye View using PCL.
+  3. Using both YOLO3 Darknet and Resnet to predict 3D dectections on the combined camera and lidar images.
+  4. Evaluating the dections base Precision and Recall.  
 
 #### Visualize range image channels (ID_S1_EX1)
 
-*Where to find this task?*
+Lidar data is stored as a range image in the Waymo Open Dataset. Using OpenCV and NumPy, we filtered the "range" and "intensity" channels from the image, and converted the float data to 8-bit unsigned integers.  Below is a visualization of two video frames, where the top half is the range channel, and the bottom half is the intensity for each visualization: 
 
-This task involves writing code within the function show_range_image located in the file student/objdet_pcl.py.
-
-*What this task is about?*
-
-In the Waymo Open dataset, lidar data is stored as a range image. Therefore, this task is about extracting two of the data channels within the range image, which are "range" and "intensity", and convert the floating-point data to an 8-bit integer value range. Once you have done so, please use the OpenCV library to stack the range and intensity image vertically and visualize it.
-
-A detailed description of all required steps can be found in the code.
-
-![](img/range_img0.png)
-
-![](img/range_img1.png)
+![Lidar visualization 1](img/range_img0.png)
+![Lidar visualization 2](img/range_img1.png)
 
 #### Visualize lidar point-cloud (ID_S1_EX2)
 
-*Where to find this task?*
+We leveraged the Open3D library to make a 3D interactive visualization of the lidar point-cloud.
 
-This task involves writing code within the function show_pcl located in the file student/objdet_pcl.py.
-
-*What this task is about?*
-
-The goal of this task is to use the Open3D library to display the lidar point-cloud in a 3d viewer in order to develop a feel for the nature of lidar point-clouds. A detailed description of all required steps can be found in the code.
-
-When the code is functional, you are supposed to use the viewer to locate and closely inspect point-clouds on vehicles and write a short report that includes the following items:
 
     Find and display 6 examples of vehicles with varying degrees of visibility in the point-cloud
     Identify vehicle features that appear as a stable feature on most vehicles (e.g. rear-bumper, tail-lights) and describe them briefly. Also, use the range image viewer from the last example to underpin your findings using the lidar intensity channel.
@@ -79,7 +68,63 @@ A detailed description of all required steps can be found in the code.
 ![](img/s2e3b.png)
 
 ### 3
+Add a second model from a GitHub repo (ID_S3_EX1)
+Task preparations
 
+In file loop_over_dataset.py, set the attributes for code execution in the following way:
+
+    data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord
+    show_only_frames = [50, 51]
+    exec_data = ['pcl_from_rangeimage', 'load_image']
+    exec_detection = ['bev_from_pcl', 'detect_objects']
+    exec_tracking = []
+    exec_visualization = ['show_objects_in_bev_labels_in_camera']
+    configs_det = det.load_configs(model_name="fpn_resnet")
+
+Where to find this task?
+
+This task involves writing code within the functions detect_objects, load_configs_model and create_model located in the file student/objdet_detect.py.
+What this task is about?
+
+The model-based detection of objects in lidar point-clouds using deep-learning is a heavily researched area with new approaches appearing in the literature and on GitHub every few weeks. On the website Papers With Code and on GitHub, several repositories with code for object detection can be found, such as Complex-YOLO: Real-time 3D Object Detection on Point Clouds and Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clouds.
+
+The goal of this task is to illustrate how a new model can be integrated into an existing framework. The task consists of the following steps:
+
+    Clone the repo Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clouds
+    Familiarize yourself with the code in SFA3D->test.py with the goal of understanding the steps involved for performing inference with a pre-trained model
+    Extract the relevant parameters from SFA3D->test.py->parse_test_configs() and add them to the configs structure in load_configs_model.
+    Instantiate the model for fpn_resnet in create_model.
+    After model inference has been performed, decode the output and perform post-processing in detect_objects-
+    Visualize the results by setting the flag show_objects_in_bev_labels_in_camera
+
+Note that the pre-trained model from SFA3D as well as the model classes and some helper functions have already been integrated into the mid-term project. You can find all related files in the folder tools/objdet_models/resnet.
+
+Also note that in this project, we are only focussing on the detection of vehicles, even though the Waymo Open dataset contains labels for other road users as well.
+What your result should look like
+
+Note that the visualization of tracking results will be implemented in the next task. At this point, the content of detections should look like this in the VS Code inspector:
+An example of `detections` data, showing the various variables and arrays making it up
+
+An example of detections data
+Extract 3D bounding boxes from model response (ID_S3_EX2)
+Task preparations
+
+In file loop_over_dataset.py, set the attributes for code execution in the following way:
+
+    data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord
+    show_only_frames = [50, 51]
+    exec_data = ['pcl_from_rangeimage', 'load_image']
+    exec_detection = ['bev_from_pcl', 'detect_objects']
+    exec_tracking = []
+    exec_visualization = ['show_objects_in_bev_labels_in_camera']
+    configs_det = det.load_configs(model_name="fpn_resnet")
+
+Where to find this task?
+
+This task involves writing code within detect_objects located in the file student/objdet_detect.py.
+What this task is about?
+
+As the model input is a three-channel BEV map, the detected objects will be returned with coordinates and properties in the BEV coordinate space. Thus, before the detections can move along in the processing pipeline, they need to be converted into metric coordinates in vehicle space. This task is about performing this conversion such that all detections have the format [1, x, y, z, h, w, l, yaw], where 1 denotes the class id for the object type vehicle. 
 
 ![Results from 60 frames of resnet detection](movie/detection2.gif)
 
@@ -87,6 +132,84 @@ A detailed description of all required steps can be found in the code.
 
 
 ### 4
+
+Compute intersection-over-union between labels and detections (ID_S4_EX1)
+Task preparations
+
+In file loop_over_dataset.py, set the attributes for code execution in the following way:
+
+    data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord
+    show_only_frames = [50, 51]
+    exec_data = ['pcl_from_rangeimage']
+    exec_detection = ['bev_from_pcl', 'detect_objects', 'validate_object_labels', 'measure_detection_performance']
+    exec_tracking = []
+    exec_visualization = ['show_detection_performance']
+    configs_det = det.load_configs(model_name="darknet")
+
+Where to find this task?
+
+This task involves writing code within detect_objects located in the file student/objdet_eval.py.
+What this task is about?
+
+The goal of this task is to find pairings between ground-truth labels and detections, so that we can determine wether an object has been (a) missed (false negative), (b) successfully detected (true positive) or (c) has been falsely reported (false positive). Based on the labels within the Waymo Open Dataset, your task is to compute the geometrical overlap between the bounding boxes of labels and detected objects and determine the percentage of this overlap in relation to the area of the bounding boxes. A default method in the literature to arrive at this value is called intersection over union, which is what you will need to implement in this task.
+
+A detailed description of all required steps can be found in the code.
+What your result should look like
+
+After looping over all pairings of labels and detections, the data structures ious and center_devs should show the following content for frame 50 of the sequence defined in section "task preparations":
+Example IOU values - in this case, two values around 0.75
+
+Example IOU values
+Example `center_devs` values - in this case, two arrays each with three values somewhere between -1 and 1
+
+Example center_devs values
+Tips for the implementation
+
+    Use the function tools.compute_box_corners to extract the four corners of a bounding box, which can be easily used with the Polygon structure of the Shapely toolbox.
+    In case of multiple matches, keep the object/label pair with max. IOU
+
+Compute false-negatives and false-positives (ID_S4_EX2)
+Task preparations
+
+Please use the settings of the previous task
+Where to find this task?
+
+This task involves writing code within detect_objects located in the file student/objdet_eval.py.
+What this task is about?
+
+Based on the pairings between ground-truth labels and detected objects, the goal of this task is to determine the number of false positives and false negatives for the current frame. After all frames have been processed, an overall performance measure will be computed based on the results produced in this task.
+
+A detailed description of all required steps can be found in the code.
+What your result should look like
+
+After looping over all pairings of labels and detections, the data structure det_performance should show the following content for frame 50 of the sequence defined in section "task preparations":
+Example `det_performance` values - made up of arrays of varying values and length
+
+Example det_performance values
+Compute precision and recall (ID_S4_EX3)
+Task preparations
+
+In file loop_over_dataset.py, set the attributes for code execution in the following way:
+
+    data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord
+    show_only_frames = [50, 150]
+    exec_data = ['pcl_from_rangeimage']
+    exec_detection = ['bev_from_pcl', 'detect_objects', 'validate_object_labels', 'measure_detection_performance']
+    exec_tracking = []
+    exec_visualization = ['show_detection_performance']
+    configs_det = det.load_configs(model_name="darknet")
+
+Where to find this task?
+
+This task involves writing code within detect_objects located in the file student/objdet_eval.py.
+What this task is about?
+
+After processing all the frames of a sequence, the performance of the object detection algorithm shall now be evaluated. To do so in a meaningful way, the two standard measures "precision" and "recall" will be used, which are based on the accumulated number of positives and negatives from all frames.
+
+A detailed description of all required steps can be found in the code.
+What your result should look like
+
+For the frame sequence defined in "task preparations", the following performance measures should result: 
 
 
 ![Results from two frames](img/metrics2.png)
@@ -147,17 +270,22 @@ BEV map properties:
 
 Precision and recall:
 
-Precision:  
+Precision:
+
   ![\frac{TP}{TP + FP}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP%7D%7BTP+%2B+FP%7D)
 
 
 Recall:
-    ![\frac{TP}{TP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP%7D%7BTP+%2B+FN%7D)
-Accuracy: 
+
+  ![\frac{TP}{TP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP%7D%7BTP+%2B+FN%7D)
+
+Accuracy:
+
   ![\frac{TP + TN}{TP + TN + FP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP+%2B+TN%7D%7BTP+%2B+TN+%2B+FP+%2B+FN%7D)
 
 
-Average Precision: 
+Average Precision:
+
   ![\frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7B1%7D%7Bn%7D+%5Csum_%7BRecall_%7Bi%7D%7DPrecision%28Recall_%7Bi%7D%29)
 
 ---------
