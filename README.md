@@ -3,10 +3,68 @@
 
 ![Gif of 60 frames of darknet](movie/darknet.gif)
 
+Point-cloud and camera image sensor fusion tracking of vehicles utilization the Waymo Open Dataset, Darknet, and FPN ResNet.
 
-## Engineering Overview. 
+## Installation Instructions for Running Locally
 
-[comment]: Which results did you achieve? Which part of the project was most difficult for you to complete, and why?
+### Python
+The project has been written using Python 3.8. Please make sure that your local installation is equal or above this version. 
+
+### Package Requirements
+All dependencies required for the project have been listed in the file `requirements.txt`. You may either install them one-by-one using pip or you can use the following command to install them all at once: 
+`pip3 install -r requirements.txt` 
+
+### Waymo Open Dataset Files
+This project makes use of three different sequences to illustrate the concepts of object detection and tracking. These are: 
+- Sequence 1 : `training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord`
+- Sequence 2 : `training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord`
+- Sequence 3 : `training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord`
+
+To download these files, you will have to register with Waymo Open Dataset first (may take up to 48 hours to activate access after registration): [Open Dataset – Waymo](https://waymo.com/open/terms)
+
+Once you have access, download the individual sequences [here](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files) from the `training/` folder. Save the `tfrecord`-files into the `dataset` folder of this project.
+
+
+### Pre-Trained Models
+The pre-trained models for the 3D object detection can be downloaded [here](https://drive.google.com/file/d/1Pqx7sShlqKSGmvshTYbNDcUEYyZwfn3A/view?usp=sharing) (darknet) and [here](https://drive.google.com/file/d/1RcEfUIF1pzDZco8PJkZ10OL-wLL2usEj/view?usp=sharing) (fpn_resnet). Once downloaded, please copy the model files into the paths `/tools/objdet_models/darknet/pretrained` and `/tools/objdet_models/fpn_resnet/pretrained` respectively.
+
+### Using Pre-Computed Results
+
+In the main file `loop_over_dataset.py`, you can choose which steps of the algorithm should be executed. If you want to call a specific function, you simply need to add the corresponding string literal to one of the following lists: 
+
+- `exec_detection` : controls which steps of model-based 3D object detection are performed
+  - `pcl_from_rangeimage` transforms the Waymo Open Data range image into a 3D point-cloud
+  - `load_image` returns the image of the front camera
+  - `bev_from_pcl` transforms the point-cloud into a fixed-size birds-eye view perspective
+  - `detect_objects` executes the actual detection and returns a set of objects (only vehicles) 
+  - `validate_object_labels` decides which ground-truth labels should be considered (e.g. based on difficulty or visibility)
+  - `measure_detection_performance` contains methods to evaluate detection performance for a single frame
+
+In case you do not include a specific step into the list, pre-computed binary files will be loaded instead. This enables you to run the algorithm and look at the results even without having implemented anything yet. The pre-computed results for the mid-term project need to be loaded using [this](https://drive.google.com/drive/folders/1-s46dKSrtx8rrNwnObGbly2nO3i4D7r7?usp=sharing) link. Unzip the file within and put its content into the folder `results`.
+
+- `exec_tracking` : controls the execution of the object tracking algorithm
+
+- `exec_visualization` : controls the visualization of results
+  - `show_range_image` displays two LiDAR range image channels (range and intensity)
+  - `show_labels_in_image` projects ground-truth boxes into the front camera image
+  - `show_objects_and_labels_in_bev` projects detected objects and label boxes into the birds-eye view
+  - `show_objects_in_bev_labels_in_camera` displays a stacked view with labels inside the camera image on top and the birds-eye view with detected objects on the bottom
+  - `show_tracks` displays the tracking results
+  - `show_detection_performance` displays the performance evaluation based on all detected 
+  - `make_tracking_movie` renders an output movie of the object tracking results
+
+The final project uses pre-computed lidar detections in order for all students to have the same input data. If you use the workspace, the data is prepared there already. Otherwise, [download the pre-computed lidar detections](https://drive.google.com/drive/folders/1IkqFGYTF6Fh_d8J3UjQOSNJ2V42UDZpO?usp=sharing) (~1 GB), unzip them and put them in the folder `results`.
+
+## Engineering Overview
+
+Code languages and packages most used in this work:
+* Python
+* TensorFlow
+* OpenCV
+* Point Cloud Library (PCL)
+* Open3D
+* NumPy
+* Matplotlib
 
 Camera-lidar fusion detection takes four steps:
   1. Engineering the Lidar Point-Cloud from range images.
@@ -14,7 +72,7 @@ Camera-lidar fusion detection takes four steps:
   3. Using both YOLO3 Darknet and Resnet to predict 3D dectections on the combined camera and lidar images.
   4. Evaluating the dections base Precision and Recall.  
 
-#### Key Terms
+#### Key Terms Preview
 
 * Frustum: portion of cone or pyramid that lies between parallel planes
 * Voxel: 3D pixel - Volume Element represents unit of 3d space in a grid
@@ -32,7 +90,74 @@ Camera-lidar fusion detection takes four steps:
 
 ## Section 1 : Compute Lidar Point-Cloud from Range Image
 
+[Paper on Dataset](https://arxiv.org/pdf/1912.04838.pdf)
+
+![](img/waymo_lidar.png)
+
+Waymo uses Lidar, cameras, Radar for autonomous navigation.  They even microphones to help detect ambulances and police cars.
+
+Roof-mounted "Top" lidar rotates 360 degrees on top of roof with a vertical field of vision -17.6 degrees to +2.4 degrees with a 75m limit in the dataset. Also space between lidar beams widens with distance.  Limitations of 360 lidar include the space between beams (aka resolution) widening with distance from the origin.  Also the car chasis will create blind spots, creating the need for Perimeter LiDAR sensors:
+
+![](img/top_lidar_blind_spot.png)
+
+Perimeter LiDAR has vertical field of vision from -90 degrees to + 30 degrees at up to 20 meters.  Actual sensor range is higher, but the dataset limits at 20m.  Perimeter lidars are on front, back and front corners of vehicle.
+
 ### Visualize range image channels (ID_S1_EX1)
+
+Access LiDAR Data:
+
+    -- Frame
+      |-- lasers ⇒ one branch for each entry in LaserName
+          |-- name (LaserName)
+          |-- ri_return1 (RangeImage class)
+              |-- range_image_compressed
+              |-- camera_projection_compressed
+              |-- range_image_pose_compressed
+              |-- range_image
+          |-- ri_return2 (same as ri_return1)
+
+```
+lidar_name = dataset_pb2.LaserName.TOP
+lidar = [obj for obj in frame.lasers if obj.name == lidar_name][0]
+```
+
+Lidar measurements are stored as a Range Image rather than a point cloud.  Object dectection ground-truth labels (manually labeled) in `Frame.laser_labels`.
+
+    -- Frame
+      |-- Context
+        |-- name
+        |-- camera_calibrations ⇒ one branch for each entry in CameraName
+        |-- laser_calibrations ⇒ ⇒ one branch for each entry in LaserName
+        |-- Stats
+        |-- laser_object_counts
+        |-- camera_object_counts
+        |-- time_of_day
+        |-- location
+        |-- weather
+      |-- timestamp_micros
+      |-- laser_labels ⇒ one branch for each entry in LaserName
+      |-- camera_labels ⇒ one branch for each entry in CameraName
+
+Laser calibrations give you the beam inclinations and extrinsic calibration for each laser LED.
+
+Laser Calibrations:
+```
+lidar_name = dataset_pb2.LaserName.TOP
+calib_lidar = [obj for obj in frame.context.laser_calibrations if obj.name == lidar_name][0]
+
+# Retrieving Vertical Field-of-view
+vfov_rad = calib_lidar.beam_inclination_max - calib_lidar.beam_inclination_min
+print(vfov_rad*180/np.pi)
+--> 20.360222720319797
+```
+
+Accessing calibrations:
+```
+calib_lidar.extrinsic.transform
+```
+
+There are 64 LEDs in Waymo's top LiDAR sensor.  Extrinsic Calibration Matrix top lidar +1.43m from origin of vehicle coordinate system with height fo +2.184.
+
 
 Lidar data is stored as a range image in the Waymo Open Dataset. Using OpenCV and NumPy, we filtered the "range" and "intensity" channels from the image, and converted the float data to 8-bit unsigned integers.  Below is a visualization of two video frames, where the top half is the range channel, and the bottom half is the intensity for each visualization: 
 
@@ -260,132 +385,103 @@ Object dectection is based on deep learning models that "learn" based on a large
 Yes, having more data.  Going through and checking the annotations to make sure they are correct. 
 
 
+## More Details and Notes
 
-Below is the orignal README from Udacity:
----------
+## Sensors
 
-# SDCND : Sensor Fusion and Tracking
-This is the project for the second course in the  [Udacity Self-Driving Car Engineer Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213) : Sensor Fusion and Tracking. 
-
-In this project, you'll fuse measurements from LiDAR and camera and track vehicles over time. You will be using real-world data from the Waymo Open Dataset, detect objects in 3D point clouds and apply an extended Kalman filter for sensor fusion and tracking.
-
-<img src="img/img_title_1.jpeg"/>
-
-The project consists of two major parts: 
-1. **Object detection**: In this part, a deep-learning approach is used to detect vehicles in LiDAR data based on a birds-eye view perspective of the 3D point-cloud. Also, a series of performance measures is used to evaluate the performance of the detection approach. 
-2. **Object tracking** : In this part, an extended Kalman filter is used to track vehicles over time, based on the lidar detections fused with camera detections. Data association and track management are implemented as well.
-
-The following diagram contains an outline of the data flow and of the individual steps that make up the algorithm. 
-
-<img src="img/img_title_2_new.png"/>
-
-Also, the project code contains various tasks, which are detailed step-by-step in the code. More information on the algorithm and on the tasks can be found in the Udacity classroom. 
-
-## Project File Structure
-
-📦project<br>
- ┣ 📂dataset --> contains the Waymo Open Dataset sequences <br>
- ┃<br>
- ┣ 📂misc<br>
- ┃ ┣ evaluation.py --> plot functions for tracking visualization and RMSE calculation<br>
- ┃ ┣ helpers.py --> misc. helper functions, e.g. for loading / saving binary files<br>
- ┃ ┗ objdet_tools.py --> object detection functions without student tasks<br>
- ┃ ┗ params.py --> parameter file for the tracking part<br>
- ┃ <br>
- ┣ 📂results --> binary files with pre-computed intermediate results<br>
- ┃ <br>
- ┣ 📂student <br>
- ┃ ┣ association.py --> data association logic for assigning measurements to tracks incl. student tasks <br>
- ┃ ┣ filter.py --> extended Kalman filter implementation incl. student tasks <br>
- ┃ ┣ measurements.py --> sensor and measurement classes for camera and lidar incl. student tasks <br>
- ┃ ┣ objdet_detect.py --> model-based object detection incl. student tasks <br>
- ┃ ┣ objdet_eval.py --> performance assessment for object detection incl. student tasks <br>
- ┃ ┣ objdet_pcl.py --> point-cloud functions, e.g. for birds-eye view incl. student tasks <br>
- ┃ ┗ trackmanagement.py --> track and track management classes incl. student tasks  <br>
- ┃ <br>
- ┣ 📂tools --> external tools<br>
- ┃ ┣ 📂objdet_models --> models for object detection<br>
- ┃ ┃ ┃<br>
- ┃ ┃ ┣ 📂darknet<br>
- ┃ ┃ ┃ ┣ 📂config<br>
- ┃ ┃ ┃ ┣ 📂models --> darknet / yolo model class and tools<br>
- ┃ ┃ ┃ ┣ 📂pretrained --> copy pre-trained model file here<br>
- ┃ ┃ ┃ ┃ ┗ complex_yolov4_mse_loss.pth<br>
- ┃ ┃ ┃ ┣ 📂utils --> various helper functions<br>
- ┃ ┃ ┃<br>
- ┃ ┃ ┗ 📂resnet<br>
- ┃ ┃ ┃ ┣ 📂models --> fpn_resnet model class and tools<br>
- ┃ ┃ ┃ ┣ 📂pretrained --> copy pre-trained model file here <br>
- ┃ ┃ ┃ ┃ ┗ fpn_resnet_18_epoch_300.pth <br>
- ┃ ┃ ┃ ┣ 📂utils --> various helper functions<br>
- ┃ ┃ ┃<br>
- ┃ ┗ 📂waymo_reader --> functions for light-weight loading of Waymo sequences<br>
- ┃<br>
- ┣ basic_loop.py<br>
- ┣ loop_over_dataset.py<br>
+Another interesting real-world sensor issue is that acceleration, deceleration, potholes, and other factors can change the pitch, or angle of the car relative to the road. So the car or robot perception systems need to be able to adapt to these changes in sensor orientation. Lidar can also be sensitive to vibrations coming from motors, actuators, or other sources on the vehicle or robot.
 
 
 
-## Installation Instructions for Running Locally
-### Cloning the Project
-In order to create a local copy of the project, please click on "Code" and then "Download ZIP". Alternatively, you may of-course use GitHub Desktop or Git Bash for this purpose. 
+### TF Records
 
-### Python
-The project has been written using Python 3.7. Please make sure that your local installation is equal or above this version. 
+Each Waymo Dataset TF Record file contains 200 frames of data.
 
-### Package Requirements
-All dependencies required for the project have been listed in the file `requirements.txt`. You may either install them one-by-one using pip or you can use the following command to install them all at once: 
-`pip3 install -r requirements.txt` 
+Top Level:
 
-### Waymo Open Dataset Reader
-The Waymo Open Dataset Reader is a very convenient toolbox that allows you to access sequences from the Waymo Open Dataset without the need of installing all of the heavy-weight dependencies that come along with the official toolbox. The installation instructions can be found in `tools/waymo_reader/README.md`. 
+    |-- LaserName
+    |-- CameraName
+    |-- RollingShutterReadOutDirection
+    |-- Frame
+    |-- Label
 
-### Waymo Open Dataset Files
-This project makes use of three different sequences to illustrate the concepts of object detection and tracking. These are: 
-- Sequence 1 : `training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord`
-- Sequence 2 : `training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord`
-- Sequence 3 : `training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord`
+Frame Level:
 
-To download these files, you will have to register with Waymo Open Dataset first: [Open Dataset – Waymo](https://waymo.com/open/terms), if you have not already, making sure to note "Udacity" as your institution.
+    -- Frame
+      |-- images
+      |-- Context
+          |-- name
+          |-- camera_calibrations
+          |-- laser_calibrations
+          |-- Stats
+          |-- laser_object_counts
+          |-- camera_object_counts
+          |-- time_of_day
+          |-- location
+          |-- weather
+      |-- timestamp_micros
+      |-- pose
+      |-- lasers
+      |-- laser_labels
+      |-- projected_lidar_labels (same as camera_labels)
+      |-- camera_labels
+      |-- no_label_zones
 
-Once you have done so, please [click here](https://console.cloud.google.com/storage/browser/waymo_open_dataset_v_1_2_0_individual_files) to access the Google Cloud Container that holds all the sequences. Once you have been cleared for access by Waymo (which might take up to 48 hours), you can download the individual sequences. 
 
-The sequences listed above can be found in the folder "training". Please download them and put the `tfrecord`-files into the `dataset` folder of this project.
+Camera Images:
 
 
-### Pre-Trained Models
-The object detection methods used in this project use pre-trained models which have been provided by the original authors. They can be downloaded [here](https://drive.google.com/file/d/1Pqx7sShlqKSGmvshTYbNDcUEYyZwfn3A/view?usp=sharing) (darknet) and [here](https://drive.google.com/file/d/1RcEfUIF1pzDZco8PJkZ10OL-wLL2usEj/view?usp=sharing) (fpn_resnet). Once downloaded, please copy the model files into the paths `/tools/objdet_models/darknet/pretrained` and `/tools/objdet_models/fpn_resnet/pretrained` respectively.
 
-### Using Pre-Computed Results
+    -- Frame
+      |-- images ⇒ one branch for each entry in CameraName
+          |-- name (CameraName)
+          |-- image
+          |-- pose
+          |-- velocity (v_x, v_y, v_z, w_x, w_y, w_z)
+          |-- pose_timestamp
+          |-- shutter
+          |-- camera_trigger_time
+          |-- camera_readout_done_time
 
-In the main file `loop_over_dataset.py`, you can choose which steps of the algorithm should be executed. If you want to call a specific function, you simply need to add the corresponding string literal to one of the following lists: 
+Specific Camera:
+```
+camera_name = dataset_pb2.CameraName.FRONT
+image = [obj for obj in frame.images if obj.name == camera_name][0]
+```
 
-- `exec_data` : controls the execution of steps related to sensor data. 
-  - `pcl_from_rangeimage` transforms the Waymo Open Data range image into a 3D point-cloud
-  - `load_image` returns the image of the front camera
+Display Camera Image:
+```
+from PIL import Image
+import io
 
-- `exec_detection` : controls which steps of model-based 3D object detection are performed
-  - `bev_from_pcl` transforms the point-cloud into a fixed-size birds-eye view perspective
-  - `detect_objects` executes the actual detection and returns a set of objects (only vehicles) 
-  - `validate_object_labels` decides which ground-truth labels should be considered (e.g. based on difficulty or visibility)
-  - `measure_detection_performance` contains methods to evaluate detection performance for a single frame
+# convert the image into rgb format
+image = np.array(Image.open(io.BytesIO(camera.image)))
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-In case you do not include a specific step into the list, pre-computed binary files will be loaded instead. This enables you to run the algorithm and look at the results even without having implemented anything yet. The pre-computed results for the mid-term project need to be loaded using [this](https://drive.google.com/drive/folders/1-s46dKSrtx8rrNwnObGbly2nO3i4D7r7?usp=sharing) link. Please use the folder `darknet` first. Unzip the file within and put its content into the folder `results`.
+# resize the image to better fit the screen
+dim = (int(image.shape[1] * 0.5), int(image.shape[0] * 0.5))
+resized = cv2.resize(image, dim)
 
-- `exec_tracking` : controls the execution of the object tracking algorithm
+# display the image 
+cv2.imshow("Front-camera image", resized)
+cv2.waitKey(0)
+```
 
-- `exec_visualization` : controls the visualization of results
-  - `show_range_image` displays two LiDAR range image channels (range and intensity)
-  - `show_labels_in_image` projects ground-truth boxes into the front camera image
-  - `show_objects_and_labels_in_bev` projects detected objects and label boxes into the birds-eye view
-  - `show_objects_in_bev_labels_in_camera` displays a stacked view with labels inside the camera image on top and the birds-eye view with detected objects on the bottom
-  - `show_tracks` displays the tracking results
-  - `show_detection_performance` displays the performance evaluation based on all detected 
-  - `make_tracking_movie` renders an output movie of the object tracking results
 
-Even without solving any of the tasks, the project code can be executed. 
+## Lidar
 
-The final project uses pre-computed lidar detections in order for all students to have the same input data. If you use the workspace, the data is prepared there already. Otherwise, [download the pre-computed lidar detections](https://drive.google.com/drive/folders/1IkqFGYTF6Fh_d8J3UjQOSNJ2V42UDZpO?usp=sharing) (~1 GB), unzip them and put them in the folder `results`.
+Lidar is an active sensor, meaning it produces it's own laser light and measures the reflections off surfaces back to the sensor.  It uses time-of-flight (ToF) calcultions which allow LiDAR sensors to calculate distance from source.
+
+The movitation behind this work is my desire to do advanced AI work with autonomous robots.  Lidar is a crucical component to many advanced robotics perception activities, is starting to come in iphones and ipads, and is continuously getting cheaper.  I both find the technology and its applications fascinating, and believe it will continue to become cheaper and more prevelant over the next decade.
+
+Autonomous vehicles typically have top-mounted 360 degree LiDAR, which often can create very accurate 3D point maps of the environment around the car.  A limitation is that objects can block LiDAR lasers from detecting what's behind cars and other objects.  Where a camera or person can "see" though a car window and know that if a pedestrian is about to walk onto the street from behind a car, LiDAR lasers would refect of of the car windows and never get a reading of the person.  This is a reason why sensor fusion is so vito to autonomous robotics.
+
+There is also non-scanning LiDAR called Flash LiDAR, which points in one direction and "flashes" laser light into the field of view head of it, rather than scanning in a range of 2d or 3d degrees.
+
+360-degree scannning LiDAR typically views in an 80-100 meter range, and Flash LiDAR is usually mounted on the corners of the vehicle to detect areas immediately next to the vehicle in the 3D sensors blind-spot.
+
+LiDAR can detect anywhere from the immediate vicinity to 200 meters.
+
 
 ## External Dependencies
 Parts of this project are based on the following repositories: 
