@@ -170,14 +170,29 @@ class Trackmanagement:
         print('deleting track no.', track.id)
         self.track_list.remove(track)
         
-    def handle_updated_track(self, track):      
+    def handle_updated_track(self, track, cnt_frame):      
         ############
         # TODO Step 2: implement track management for updated tracks:
         # - increase track score
         # - set track state to 'tentative' or 'confirmed'
         ############
 
-        pass
+        if cnt_frame in track.assignments:
+            track.assignments[cnt_frame].append(1)
+        else:
+            track.assignments[cnt_frame] = [1]
+        points = 0
+        for frame in track.assignments.keys():
+            if cnt_frame - frame < params.window:
+                assignments = track.assignments[frame]
+                points += any(assignments)
+                points += len(assignments) > 1 and all(assignments)
+        track.score = points / float(params.window)
+
+        if track.state == 'initialized' and track.score >= params.delete_threshold:
+            track.state = 'tentative'
+        if track.state == 'tentative' and track.score >= params.confirmed_threshold:
+            track.state = 'confirmed'
         
         
         ############

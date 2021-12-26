@@ -122,7 +122,7 @@ class Association:
             KF.update(track, meas_list[ind_meas])
             
             # update score and track state 
-            manager.handle_updated_track(track)
+            manager.handle_updated_track(track, cnt_frame)
             
             # save updated track
             manager.track_list[ind_track] = track

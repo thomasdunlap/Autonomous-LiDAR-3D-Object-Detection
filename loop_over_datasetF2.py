@@ -53,7 +53,7 @@ import misc.params as params
 #data_filename = 'training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord' # Sequence 1
 data_filename = 'training_segment-10072231702153043603_5725_000_5745_000_with_camera_labels.tfrecord' # Sequence 2
 #data_filename = 'training_segment-10963653239323173269_1924_000_1944_000_with_camera_labels.tfrecord' # Sequence 3
-show_only_frames = [65, 100] # show only frames in interval for debugging; 200 originially
+show_only_frames = [150, 200] # show only frames in interval for debugging; 200 originially
 
 ## Prepare Waymo Open Dataset file for loading
 img_fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img/')
@@ -70,7 +70,7 @@ model_det = det.create_model(configs_det)
 configs_det.use_labels_as_objects = False # True = use groundtruth labels as objects, False = use model-based detection
 
 ## Uncomment this setting to restrict the y-range in the final project
-configs_det.lim_y = [-5, 15] 
+configs_det.lim_y = [-5, 10] 
 
 ## Initialize tracking
 KF = Filter() # set up Kalman filter 
