@@ -69,8 +69,9 @@ class Filter:
         # TODO Step 1: predict state x and estimation error covariance P to next timestep, save x and P in track
         ############
         F = self.F()
+        Q = self.Q()
         x = F * track.x
-        P = F * track.P * F.transpose() + self.Q
+        P = F * track.P * F.transpose() + Q
         track.set_x(x)
         track.set_P(P) 
         

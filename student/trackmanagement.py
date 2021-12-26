@@ -24,7 +24,7 @@ import misc.params as params
 
 class Track:
     '''Track class with state, covariance, id, score'''
-    def __init__(self, meas, id):
+    def __init__(self, meas, id, cnt_frame):
         print('creating track no.', id)
         M_rot = meas.sensor.sens_to_veh[0:3, 0:3] # rotation matrix from sensor to vehicle coordinates
         
@@ -62,8 +62,9 @@ class Track:
                             [0.0e+00, 0.0e+00, 0.0e+00, 0.0e+00,          0.0e+00,          params.sigma_p66]])
         
         self.state = 'initialized'
-        self.score = 1. / params.window
-        #self.assignments = [1]
+        self.score = 1.0 / params.window
+        self.assignments = {cnt_frame: [1]}
+        
         ############
         # END student code
         ############ 
@@ -106,7 +107,7 @@ class Trackmanagement:
         self.last_id = -1
         self.result_list = []
         
-    def manage_tracks(self, unassigned_tracks, unassigned_meas, meas_list):  
+    def manage_tracks(self, unassigned_tracks, unassigned_meas, meas_list, cnt_frame):  
         ############
         # TODO Step 2: implement track management:
         # - decrease the track score for unassigned tracks
@@ -118,11 +119,22 @@ class Trackmanagement:
         for i in unassigned_tracks:
             track = self.track_list[i]
             # check visibility    
-            if meas_list: # if not empty
-                if meas_list[0].sensor.in_fov(track.x):
+            #if meas_list: # if not empty
+            #    if meas_list[0].sensor.in_fov(track.x):
                     # your code goes here
-                    pass 
-
+            #        pass 
+            if cnt_frame in track.assignments:
+                track.assignments[cnt_frame].append(0)
+            else:
+                track.assignments[cnt_frame] = [0]
+            points = 0
+            for frame in track.assignments.keys():
+                if cnt_frame - frame < params.window:
+                    assignments = track.assignments[frame]
+                    points += any(assignments)
+                    points += len(assignments) > 1 and all(assignments)
+            track.score = points / float(params.window)
+        
         # delete old tracks   
         old_tracks = []
         for track in self.track_list:
@@ -143,15 +155,15 @@ class Trackmanagement:
         # initialize new track with unassigned measurement
         for j in unassigned_meas: 
             if meas_list[j].sensor.name == 'lidar': # only initialize with lidar measurements
-                self.init_track(meas_list[j])
+                self.init_track(meas_list[j], cnt_frame)
             
     def addTrackToList(self, track):
         self.track_list.append(track)
         self.N += 1
         self.last_id = track.id
 
-    def init_track(self, meas):
-        track = Track(meas, self.last_id + 1)
+    def init_track(self, meas, cnt_frame):
+        track = Track(meas, self.last_id + 1, cnt_frame)
         self.addTrackToList(track)
 
     def delete_track(self, track):
