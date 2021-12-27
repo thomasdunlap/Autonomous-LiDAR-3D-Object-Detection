@@ -2,67 +2,57 @@
 # Autonomous Perception: Tracking 3D-Objects Over Time
 
 
-![Gif of 60 frames of darknet](movie/darknet.gif)
+![Gif of 50 frames of darknet](movie/darknet.gif)
 
-Camera-lidar sensor fusion detection takes four steps:
-  1. Computing LiDAR point-clouds from range images.
-  2. Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library (PCL).
-  3. Using both YOLO3 Darknet and Resnet to predict 3D dectections on the combined camera and lidar images.
-  4. Evaluating the detections based Precision and Recall.  
+Camera-LiDAR sensor fusion detection takes four steps:
+  1. [Computing LiDAR point-clouds from range images.](#computing-LiDAR-point-clouds-from-waymo-range-images)
+  2. [Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library (PCL).](#transforming-the-point-cloud-to-a-birds-eye-view-using-the-point-cloud-library)
+  3. [Using both YOLO3 Darknet and Resnet to predict 3D dectections on the combined camera and LiDAR images.](#model-based-object-detection-in-bev-image)
+  4. [Evaluating the detections based Precision and Recall.](#performance-evaluation-for-object-detection)  
 
 
-## 1. Computing Lidar Point-Clouds from Waymo Range Images
-
-Waymo uses Lidar, cameras, Radar for autonomous navigation.  They even microphones to help detect ambulances and police cars.
+## Computing LiDAR Point-Clouds from Waymo Range Images
 
 ![](img/waymo_lidar.png)
 
-
-Roof-mounted "Top" lidar rotates 360 degrees on top of roof with a vertical field of vision -17.6 degrees to +2.4 degrees with a 75m limit in the dataset. Also space between lidar beams widens with distance.  Limitations of 360 lidar include the space between beams (aka resolution) widening with distance from the origin.  Also the car chasis will create blind spots, creating the need for Perimeter LiDAR sensors:
-
-![](img/top_lidar_blind_spot.png)
-
-Perimeter LiDAR has vertical field of vision from -90 degrees to + 30 degrees at up to 20 meters.  Actual sensor range is higher, but the dataset limits at 20m.  Perimeter lidars are on front, back and front corners of vehicle.
-
-There are 64 LEDs in Waymo's top LiDAR sensor.  Extrinsic Calibration Matrix top lidar +1.43m from origin of vehicle coordinate system with height fo +2.184.
+Waymo uses multiple sensors including LiDAR, cameras, radar for autonomous perception.  Even microphones are used to help detect ambulance and police sirens.
 
 ### Visualizing LiDAR Range and Intensity Channels
 
-![Lidar visualization 1](img/range_img0.png)
+![LiDAR visualization 1](img/range_img0.png)
 
-Lidar data is stored as a range image in the Waymo Open Dataset. Using OpenCV and NumPy, we filtered the "range" and "intensity" channels from the image, and converted the float data to 8-bit unsigned integers.  Below is a visualization of two video frames, where the top half is the range channel, and the bottom half is the intensity for each visualization: 
+Roof-mounted "Top" LiDAR rotates 360 degrees with a vertical field of vision or ~20 degrees (-17.6 degrees to +2.4 degrees) with a 75m limit in the dataset. 
 
-![Lidar visualization 2](img/range_img1.png)
+
+LiDAR data is stored as a range image in the Waymo Open Dataset. Using OpenCV and NumPy, we filtered the "range" and "intensity" channels from the image, and converted the float data to 8-bit unsigned integers.  Below is a visualization of two video frames, where the top half is the range channel, and the bottom half is the intensity for each visualization: 
+
+![LiDAR visualization 2](img/range_img1.png)
 
 ### Visualizing th LiDAR Point-cloud
 
 ![](img/ScreenCapture_2021-12-14-21-16-15.png)
 
-We leveraged the Open3D library to make a 3D interactive visualization of the lidar point-cloud.  Commonly visible features are windshields, tires, and mirros within 40m. Beyond 40m, cars are like slightly rounded rectangles where you might be able to make ou the windshield.  Further away vehicles and extremely close vehicles typically have lower resolution, as well as vehicles obstructing the detection of other vehicles.
+There are 64 LEDs in Waymo's top LiDAR sensor. Limitations of 360 LiDAR include the space between beams (aka resolution) widening with distance from the origin.  Also the car chasis will create blind spots, creating the need for Perimeter LiDAR sensors to be inlcuded on the sides of the vehicles.
 
-**10 Vehicles Showing Different Types of Lidar Interaction:**
+![](img/top_lidar_blind_spot.png)  
+
+We leveraged the Open3D library to make a 3D interactive visualization of the LiDAR point-cloud.  Commonly visible features are windshields, tires, and mirros within 40m. Beyond 40m, cars are like slightly rounded rectangles where you might be able to make ou the windshield.  Further away vehicles and extremely close vehicles typically have lower resolution, as well as vehicles obstructing the detection of other vehicles.
+
+**10 Vehicles Showing Different Types of LiDAR Interaction:**
 ![](img/midterm-vehicles-cloud.png)
 
-1. Truck with trailer - most of truck is high resolution visible, but part of the trailer is in the 360 lidar's blind-spot.
-2. Car partial in blind spot, back-half isn't picked up well.  This car blocks the larges area behind it from being detected by the lidar.
-3. Car shape is higly visible, where you can even see the side-mirrors and the lidar passing through the windshield.
+1. Truck with trailer - most of truck is high resolution visible, but part of the trailer is in the 360 LiDAR's blind-spot.
+2. Car partial in blind spot, back-half isn't picked up well.  This car blocks the larges area behind it from being detected by the LiDAR.
+3. Car shape is higly visible, where you can even see the side-mirrors and the LiDAR passing through the windshield.
 4. Car driving in other lane.  You can see the resolution of the car being lower because the further away the 64 LEDs project the lasers, the futher apart the points of the cloud will be.  It is also obstructed from some lasers by Car 2.
 5. This parked is unobstructed, but far enough away where it's difficult to make our the mirrors or the tires.
 6. Comparing this car to Car 3, you can see where most of the definition is either there or slightly worse, because it is further way.
 7. Car 7 is both far away and obstructed, so you can barely tell it's a car.  It's basically a box with probably a windshield.
 8. Car 8 is similar to Car 6 on the right side, but obstructed by Car 6 on the left side. 
-9. Car 9 is at the limit of the lidar's dataset's perception.  It's hard to tell it's a car.
-10. Car 10 is at the limit of the lidar's perception, and is also obstructed by car 8.
+9. Car 9 is at the limit of the LiDAR's dataset's perception.  It's hard to tell it's a car.
+10. Car 10 is at the limit of the LiDAR's perception, and is also obstructed by car 8.
 
-[comment]:![](img/ScreenCapture_2021-12-14-21-26-37.png)
-
-[comment]:![](img/ScreenCapture_2021-12-14-21-32-00.png)
-
-[comment]:![](img/ScreenCapture_2021-12-14-21-33-30.png)
-
-[comment]:![](img/ScreenCapture_2021-12-14-21-35-05.png)
-
-## 2.  Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library (PCL)
+## Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library
 
 ### Convert sensor coordinates to Bird's-Eye View map coordinates 
 
@@ -104,7 +94,7 @@ This is a visualization of the "height" channel BEV map.  We sorted and pruned p
 
 ![](img/s2e3b.png)
 
-## 3. Model-based Object Detection in BEV Image
+## Model-based Object Detection in BEV Image
 
 We used YOLO3 and Resnet deep-learning models to doe 3D Object Detection.  Complex-YOLO: Real-time 3D Object Detection on Point Clouds and Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clouds.
 
@@ -118,23 +108,24 @@ Below is a gif the of detections in action:
 ![Results from 50 frames of resnet detection](movie/detection2.gif)
 
 
-## 4. Performance Evaluation for Object Detection
+## Performance Evaluation for Object Detection
 
 ### Compute intersection-over-union between labels and detections 
 
-The goal of this task is to find pairings between ground-truth labels and detections, so that we can determine wether an object has been (a) missed (false negative), (b) successfully detected (true positive) or (c) has been falsely reported (false positive). Based on the labels within the Waymo Open Dataset, your task is to compute the geometrical overlap between the bounding boxes of labels and detected objects and determine the percentage of this overlap in relation to the area of the bounding boxes. A default method in the literature to arrive at this value is called intersection over union, which is what you will need to implement in this task.
+Based on the labels within the Waymo Open Dataset, your task is to compute the geometrical overlap between the bounding boxes of labels and detected objects and determine the percentage of this overlap in relation to the area of the bounding boxes. A default method in the literature to arrive at this value is called intersection over union, which is what you will need to implement in this task.
 
-After detections are made, we need a set of metrics to measure our progress. Vehicle predictions vs ground-truth labels typically fall into 4 categories:
+After detections are made, we need a set of metrics to measure our progress. Common classification metrics for object detection include:
 
 * *TP*: True Positive - Predicts vehicle or other object is there correctly
 * *TN*: True Negative - Correctly predicts vehicle or object is not present
 * *FP*: False Positive - Dectects object class incorrectly
 * *FN*: False Negative - Didn't detect object class when there should be a dectection
 
+One popular method of making these determinations is measuring the geometric overlap of bounding boxes vs the total area two predicted bounding boxes take up in an image, or th Intersecion over Union (IoU).
 
 ### Classification Metrics Based on Precision and Recall 
 
-After all the Lidar and Camera data has been transformed, and the detections have been predicted, we calculate the following metrics for the bounding box predictions:
+After all the LiDAR and Camera data has been transformed, and the detections have been predicted, we calculate the following metrics for the bounding box predictions:
 
 #### Formulas
 
@@ -156,9 +147,11 @@ After all the Lidar and Camera data has been transformed, and the detections hav
     
     ![\frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7B1%7D%7Bn%7D+%5Csum_%7BRecall_%7Bi%7D%7DPrecision%28Recall_%7Bi%7D%29)
 
-### mAP with Precision and Recall Visualizations
+### Precision and Recall Results Visualizations
 
 Results from 50 frames:
 ![Results from 50 frames](img/metricsMult.png)
 
+**Precision:** .954
+**Recall:** .921
 
