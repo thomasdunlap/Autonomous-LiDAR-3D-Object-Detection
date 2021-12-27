@@ -1,15 +1,20 @@
 
-# Autonomous Perception: Tracking 3D-Objects Over Time
-
+# Autonomous Perception: 3D Object Detection with Complex-YOLO
 
 ![Gif of 50 frames of darknet](movie/darknet.gif)
+
 
 Camera-LiDAR sensor fusion detection takes four steps:
   1. [Computing LiDAR point-clouds from range images.](#computing-LiDAR-point-clouds-from-waymo-range-images)
   2. [Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library (PCL).](#transforming-the-point-cloud-to-a-birds-eye-view-using-the-point-cloud-library)
-  3. [Using both YOLO3 Darknet and Resnet to predict 3D dectections on the combined camera and LiDAR images.](#model-based-object-detection-in-bev-image)
+  3. [Using both Complex-YOLO Darknet and Resnet to predict 3D dectections on transformed LiDAR images.](#model-based-object-detection-in-bev-image)
   4. [Evaluating the detections based Precision and Recall.](#performance-evaluation-for-object-detection)  
 
+![Complex-Yolo Pipeline](img/complex-yolo.png)
+
+Complex-Yolo is both highly accurate and highly performant in production:
+
+![Complex-Yolo Performance](img/complex-yolo-performance.png)
 
 ## Computing LiDAR Point-Clouds from Waymo Range Images
 
@@ -22,7 +27,6 @@ Waymo uses multiple sensors including LiDAR, cameras, radar for autonomous perce
 ![LiDAR visualization 1](img/range_img0.png)
 
 Roof-mounted "Top" LiDAR rotates 360 degrees with a vertical field of vision or ~20 degrees (-17.6 degrees to +2.4 degrees) with a 75m limit in the dataset. 
-
 
 LiDAR data is stored as a range image in the Waymo Open Dataset. Using OpenCV and NumPy, we filtered the "range" and "intensity" channels from the image, and converted the float data to 8-bit unsigned integers.  Below is a visualization of two video frames, where the top half is the range channel, and the bottom half is the intensity for each visualization: 
 
@@ -103,6 +107,7 @@ We used YOLO3 and Resnet deep-learning models to doe 3D Object Detection.  Compl
 
 The models take a three-channel BEV map as an input, and predict the class about coordinates of objects (vehicles).  We then transformed these BEV coordinates back to the vehicle coordinate-space to draw the bounding boxes in both images.
 
+![Transforming back to vehicle space](img/complex-yolo-space-conversion-arctan.png)
 
 Below is a gif the of detections in action:
 ![Results from 50 frames of resnet detection](movie/detection2.gif)
@@ -116,12 +121,18 @@ Based on the labels within the Waymo Open Dataset, your task is to compute the g
 
 After detections are made, we need a set of metrics to measure our progress. Common classification metrics for object detection include:
 
+![TP, FN, FP](img/fp-fn-tp.png)
+
 * *TP*: True Positive - Predicts vehicle or other object is there correctly
 * *TN*: True Negative - Correctly predicts vehicle or object is not present
 * *FP*: False Positive - Dectects object class incorrectly
 * *FN*: False Negative - Didn't detect object class when there should be a dectection
 
 One popular method of making these determinations is measuring the geometric overlap of bounding boxes vs the total area two predicted bounding boxes take up in an image, or th Intersecion over Union (IoU).
+
+![IoU formula](img/iou-formula.png)
+
+![IoU for Complex-Yolo](img/iou.png)
 
 ### Classification Metrics Based on Precision and Recall 
 
@@ -155,3 +166,4 @@ Results from 50 frames:
 **Precision:** .954
 **Recall:** .921
 
+[Complex Yolo Paper](https://arxiv.org/pdf/1808.02350v1.pdf)
