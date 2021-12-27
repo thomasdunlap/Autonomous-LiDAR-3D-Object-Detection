@@ -4,7 +4,7 @@
 ![Gif of 50 frames of darknet](movie/darknet.gif)
 
 
-Camera-LiDAR sensor fusion detection takes four steps:
+LiDAR object detection with Complex-YOLO takes four steps:
   1. [Computing LiDAR point-clouds from range images.](#computing-LiDAR-point-clouds-from-waymo-range-images)
   2. [Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library (PCL).](#transforming-the-point-cloud-to-a-birds-eye-view-using-the-point-cloud-library)
   3. [Using both Complex-YOLO Darknet and Resnet to predict 3D dectections on transformed LiDAR images.](#model-based-object-detection-in-bev-image)
