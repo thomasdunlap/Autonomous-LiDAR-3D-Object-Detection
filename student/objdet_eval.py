@@ -44,9 +44,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
             
             # compute intersection over union (iou) and distance between centers
 
-            ####### ID_S4_EX1 START #######     
-            ####### 
-            print("student task ID_S4_EX1 ")
+            print("task ID_S4_EX1 ")
 
             ## step 1 : extract the four corners of the current label bounding-box
             box = label.box
@@ -78,8 +76,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
                 if iou > min_iou:
                     matches_lab_det.append([iou, dist_x, dist_y, dist_z])
                     true_positives += 1
-            #######
-            ####### ID_S4_EX1 END #######     
+  
             
         # find best match and compute metrics
         if matches_lab_det:
@@ -88,9 +85,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
             center_devs.append(best_match[1:])
 
 
-    ####### ID_S4_EX2 START #######     
-    #######
-    print("student task ID_S4_EX2")
+    print("task ID_S4_EX2")
     
     # compute positives and negatives for precision/recall
     
@@ -102,9 +97,7 @@ def measure_detection_performance(detections, labels, labels_valid, min_iou=0.5)
 
     ## step 3 : compute the number of false positives
     false_positives = len(detections) - true_positives
-    
-    #######
-    ####### ID_S4_EX2 END #######     
+       
     print(f"ap {all_positives}, tp {true_positives}, fn {false_negatives}, fp {false_positives}")
     precision = true_positives / (true_positives + false_positives)
     pos_negs = [all_positives, true_positives, false_negatives, false_positives]
@@ -125,8 +118,6 @@ def compute_performance_stats(det_performance_all, configs_det):
         center_devs.append(item[1])
         pos_negs.append(item[2])
     
-    ####### ID_S4_EX3 START #######     
-    #######    
     print('student task ID_S4_EX3')
 
     ## step 1 : extract the total number of positives, true positives, false negatives and false positives
@@ -138,9 +129,7 @@ def compute_performance_stats(det_performance_all, configs_det):
 
     ## step 3 : compute recall 
     recall = true_pos / float(true_pos + false_neg)
-
-    #######    
-    ####### ID_S4_EX3 END #######     
+ 
     print('precision = ' + str(precision) + ", recall = " + str(recall))   
 
     # serialize intersection-over-union and deviations in x,y,z

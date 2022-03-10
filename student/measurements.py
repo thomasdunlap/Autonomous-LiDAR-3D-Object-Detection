@@ -43,16 +43,9 @@ class Sensor:
     
     def in_fov(self, x):
         # check if an object x can be seen by this sensor
-        ############
-        # TODO Step 4: implement a function that returns True if x lies in the sensor's field of view, 
-        # otherwise False.
-        ############
 
         return True
         
-        ############
-        # END student code
-        ############ 
              
     def get_hx(self, x):    
         # calculate nonlinear measurement expectation value h(x)   
@@ -62,20 +55,9 @@ class Sensor:
             pos_sens = self.veh_to_sens*pos_veh # transform from vehicle to lidar coordinates
             return pos_sens[0:3]
         elif self.name == 'camera':
-            
-            ############
-            # TODO Step 4: implement nonlinear camera measurement function h:
-            # - transform position estimate from vehicle to camera coordinates
-            # - project from camera to image coordinates
-            # - make sure to not divide by zero, raise an error if needed
-            # - return h(x)
-            ############
 
             pass
-        
-            ############
-            # END student code
-            ############ 
+
         
     def get_H(self, x):
         # calculate Jacobian H at current x from h(x)
@@ -111,21 +93,12 @@ class Sensor:
         
     def generate_measurement(self, num_frame, z, meas_list):
         # generate new measurement from this sensor and add to measurement list
-        ############
-        # TODO Step 4: remove restriction to lidar in order to include camera as well
-        ############
         
         if self.name == 'lidar':
             meas = Measurement(num_frame, z, self)
             meas_list.append(meas)
         return meas_list
-        
-        ############
-        # END student code
-        ############ 
-        
-        
-################### 
+
         
 class Measurement:
     '''Measurement class including measurement values, covariance, timestamp, sensor'''
@@ -152,12 +125,4 @@ class Measurement:
             self.yaw = z[6]
         elif sensor.name == 'camera':
             
-            ############
-            # TODO Step 4: initialize camera measurement including z and R 
-            ############
-
             pass
-        
-            ############
-            # END student code
-            ############ 

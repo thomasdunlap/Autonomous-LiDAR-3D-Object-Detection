@@ -59,9 +59,8 @@ def load_configs_model(model_name='darknet', configs=None):
         configs.use_giou_loss = False
 
     elif model_name == 'fpn_resnet':
-        ####### ID_S3_EX1-3 START #######     
-        #######
-        print("student task ID_S3_EX1-3")
+
+        print("task ID_S3_EX1-3")
         configs.model_path = os.path.join(parent_path, 'tools', 'objdet_models', 'resnet')
         configs.pretrained_filename = os.path.join(configs.model_path, 'pretrained', 'fpn_resnet_18_epoch_300.pth')
         configs.pretrained_path = configs.pretrained_filename
@@ -99,10 +98,7 @@ def load_configs_model(model_name='darknet', configs=None):
                         'z_coor': configs.num_z, 
                         'dim': configs.num_dim
                         }
-
-
-        #######
-        ####### ID_S3_EX1-3 END #######     
+  
 
     else:
         raise ValueError("Error: Invalid model name")
@@ -155,17 +151,12 @@ def create_model(configs):
     elif 'fpn_resnet' in configs.arch:
         print('using ResNet architecture with feature pyramid')
         
-        ####### ID_S3_EX1-4 START #######     
-        #######
-        print("student task ID_S3_EX1-4")
+        print("task ID_S3_EX1-4")
 
         model = fpn_resnet.get_pose_net(num_layers=configs.num_layers,
                                         heads=configs.heads,
                                         head_conv=configs.head_conv,
-                                        imagenet_pretrained=configs.imagenet_pretrained)
-
-        #######
-        ####### ID_S3_EX1-4 END #######     
+                                        imagenet_pretrained=configs.imagenet_pretrained) 
     
     else:
         assert False, 'Undefined model backbone'
@@ -209,9 +200,7 @@ def detect_objects(input_bev_maps, model, configs):
         elif 'fpn_resnet' in configs.arch:
             # decode output and perform post-processing
             
-            ####### ID_S3_EX1-5 START #######     
-            #######
-            print("student task ID_S3_EX1-5")
+            print("task ID_S3_EX1-5")
 
             outputs['hm_cen'] = _sigmoid(outputs['hm_cen'])
             outputs['cen_offset'] = _sigmoid(outputs['cen_offset'])
@@ -223,15 +212,9 @@ def detect_objects(input_bev_maps, model, configs):
             print(detections)
             print(len(detections))
 
-            #######
-            ####### ID_S3_EX1-5 END #######     
 
-            
-
-    ####### ID_S3_EX2 START #######     
-    #######
     # Extract 3d bounding boxes from model response
-    print("student task ID_S3_EX2")
+    print("task ID_S3_EX2")
     objects = [] 
 
     ## step 1 : check whether there are any detections
@@ -252,9 +235,7 @@ def detect_objects(input_bev_maps, model, configs):
             and (z >= configs.lim_z[0] and z <= configs.lim_z[1])):
             
             ## step 4 : append the current object to the 'objects' array
-            objects.append([1, x, y, z, h, w, l, yaw])
-    #######
-    ####### ID_S3_EX2 START #######   
+            objects.append([1, x, y, z, h, w, l, yaw]) 
     
     return objects    
 

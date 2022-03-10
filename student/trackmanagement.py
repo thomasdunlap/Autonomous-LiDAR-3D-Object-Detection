@@ -27,13 +27,6 @@ class Track:
     def __init__(self, meas, id, cnt_frame):
         print('creating track no.', id)
         M_rot = meas.sensor.sens_to_veh[0:3, 0:3] # rotation matrix from sensor to vehicle coordinates
-        
-        ############
-        # TODO Step 2: initialization:
-        # - replace fixed track initialization values by initialization of x and P based on 
-        # unassigned measurement transformed from sensor to vehicle coordinates
-        # - initialize track state and track score with appropriate values
-        ############
 
         self.x = np.matrix([[49.53980697],
                         [ 3.41006279],
@@ -64,10 +57,6 @@ class Track:
         self.state = 'initialized'
         self.score = 1.0 / params.window
         self.assignments = {cnt_frame: [1]}
-        
-        ############
-        # END student code
-        ############ 
                
         # other track attributes
         self.id = id
@@ -108,12 +97,6 @@ class Trackmanagement:
         self.result_list = []
         
     def manage_tracks(self, unassigned_tracks, unassigned_meas, meas_list, cnt_frame):  
-        ############
-        # TODO Step 2: implement track management:
-        # - decrease the track score for unassigned tracks
-        # - delete tracks if the score is too low or P is too big (check params.py for parameters that might be helpful, but
-        # feel free to define your own parameters)
-        ############
         
         # decrease score for unassigned tracks
         for i in unassigned_tracks:
@@ -147,10 +130,6 @@ class Trackmanagement:
         
         for track in old_tracks:
             self.delete_track(track)
-
-        ############
-        # END student code
-        ############ 
             
         # initialize new track with unassigned measurement
         for j in unassigned_meas: 
@@ -171,11 +150,6 @@ class Trackmanagement:
         self.track_list.remove(track)
         
     def handle_updated_track(self, track, cnt_frame):      
-        ############
-        # TODO Step 2: implement track management for updated tracks:
-        # - increase track score
-        # - set track state to 'tentative' or 'confirmed'
-        ############
 
         if cnt_frame in track.assignments:
             track.assignments[cnt_frame].append(1)
@@ -194,7 +168,3 @@ class Trackmanagement:
         if track.state == 'tentative' and track.score >= params.confirmed_threshold:
             track.state = 'confirmed'
         
-        
-        ############
-        # END student code
-        ############ 
