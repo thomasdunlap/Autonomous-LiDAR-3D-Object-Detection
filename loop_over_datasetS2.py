@@ -10,7 +10,8 @@
 # https://www.udacity.com/course/self-driving-car-engineer-nanodegree--nd013
 # ----------------------------------------------------------------------
 #
-
+# We have to uncomment the visualization lines in objdet_pcl.py to see the visualizations
+#
 ##################
 ## Imports
 
