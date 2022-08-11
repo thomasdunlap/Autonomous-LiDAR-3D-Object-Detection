@@ -36,11 +36,11 @@ LiDAR data is stored as a range image in the Waymo Open Dataset. Using OpenCV an
 
 ![](img/ScreenCapture_2021-12-14-21-16-15.png)
 
-There are 64 LEDs in Waymo's top LiDAR sensor. Limitations of 360 LiDAR include the space between beams (aka resolution) widening with distance from the origin.  Also the car chasis will create blind spots, creating the need for Perimeter LiDAR sensors to be inlcuded on the sides of the vehicles.
+There are 64 LEDs in Waymo's top LiDAR sensor. Limitations of 360 LiDAR include the space between beams (aka resolution) widening with distance from the origin.  Also the car chasis will create blind spots, creating the need for perimeter LiDAR sensors to be inlcuded on the sides of the vehicles.
 
 ![](img/top_lidar_blind_spot.png)  
 
-We leveraged the Open3D library to make a 3D interactive visualization of the LiDAR point-cloud.  Commonly visible features are windshields, tires, and mirros within 40m. Beyond 40m, cars are like slightly rounded rectangles where you might be able to make ou the windshield.  Further away vehicles and extremely close vehicles typically have lower resolution, as well as vehicles obstructing the detection of other vehicles.
+We leverage the Open3D library to make a 3D interactive visualization of the LiDAR point-cloud.  Commonly visible features are windshields, tires, and mirrors within 40m. Beyond 40m, cars are like slightly rounded rectangles where you might be able to make ou the windshield.  Further away vehicles and extremely close vehicles typically have lower resolution, as well as vehicles obstructing the detection of other vehicles.
 
 **10 Vehicles Showing Different Types of LiDAR Interaction:**
 ![](img/midterm-vehicles-cloud.png)
@@ -58,7 +58,7 @@ We leveraged the Open3D library to make a 3D interactive visualization of the Li
 
 ## Transforming the point-cloud to a Bird's Eye View using the Point Cloud Library
 
-### Convert sensor coordinates to Bird's-Eye View map coordinates 
+### Converting sensor coordinates to Bird's-Eye View map coordinates 
 
 ![](img/s2e1a.png)
 
@@ -100,7 +100,7 @@ This is a visualization of the "height" channel BEV map.  We sorted and pruned p
 
 ## Model-based Object Detection in BEV Image
 
-We used YOLO3 and Resnet deep-learning models to doe 3D Object Detection.  Complex-YOLO: Real-time 3D Object Detection on Point Clouds and Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clouds.
+We used YOLO3 and ResNet deep-learning models for Object Detection.  Complex-YOLO: Real-time 3D Object Detection on Point Clouds and Super Fast and Accurate 3D Object Detection based on 3D LiDAR Point Clouds.
 
 ### Extract 3D bounding boxes from model response 
 
@@ -154,7 +154,7 @@ After all the LiDAR and Camera data has been transformed, and the detections hav
     ![\frac{TP + TN}{TP + TN + FP + FN}](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7BTP+%2B+TN%7D%7BTP+%2B+TN+%2B+FP+%2B+FN%7D)
 
 
-* *Mean Average Precision*: 
+* *Average Precision*: 
     
     ![\frac{1}{n} \sum_{Recall_{i}}Precision(Recall_{i})](https://render.githubusercontent.com/render/math?math=%5Cdisplaystyle+%5Cfrac%7B1%7D%7Bn%7D+%5Csum_%7BRecall_%7Bi%7D%7DPrecision%28Recall_%7Bi%7D%29)
 
